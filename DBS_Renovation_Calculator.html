@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DBS Properties - Renovation Cost Calculator</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Work+Sans:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #0A2F51;
+            --secondary: #0E5E8C;
+            --accent: #D4A574;
+            --success: #2D5F3F;
+            --bg: #FAFBFC;
+            --card-bg: #FFFFFF;
+            --text: #1A2332;
+            --text-light: #64748B;
+            --border: #E2E8F0;
+        }
+        
+        body {
+            font-family: 'Work Sans', sans-serif;
+            background: linear-gradient(135deg, #FAFBFC 0%, #F1F5F9 100%);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        h1 {
+            font-family: 'Space Mono', monospace;
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 8px;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            font-weight: 300;
+        }
+        
+        .market-selector {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            margin-bottom: 32px;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .market-selector label {
+            font-weight: 600;
+            color: var(--text);
+        }
+        
+        .market-btn {
+            padding: 12px 32px;
+            border: 2px solid var(--border);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Work Sans', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .market-btn:hover {
+            border-color: var(--secondary);
+            background: #F8FAFC;
+        }
+        
+        .market-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .summary-card {
+            position: sticky;
+            top: 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(10, 47, 81, 0.2);
+            margin-bottom: 32px;
+        }
+        
+        .summary-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+        
+        .total-amount {
+            font-family: 'Space Mono', monospace;
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -2px;
+        }
+        
+        .total-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 20px;
+        }
+        
+        .selected-count {
+            font-size: 1rem;
+            opacity: 0.9;
+            padding: 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            display: inline-block;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 32px;
+        }
+        
+        .categories {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .category-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 2px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .category-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.3rem;
+            color: var(--primary);
+            font-weight: 700;
+        }
+        
+        .category-total {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.1rem;
+            color: var(--success);
+            font-weight: 700;
+        }
+        
+        .category-items {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: var(--bg);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            transition: all 0.2s ease;
+        }
+        
+        .item:hover {
+            background: white;
+            border-color: var(--accent);
+        }
+        
+        .item.checked {
+            background: #EFF6FF;
+            border-color: var(--secondary);
+        }
+        
+        .item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            cursor: pointer;
+            accent-color: var(--secondary);
+        }
+        
+        .item-label {
+            flex: 1;
+            font-size: 0.95rem;
+            color: var(--text);
+            cursor: pointer;
+        }
+        
+        .item-cost {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+        
+        .reset-btn {
+            width: 100%;
+            padding: 14px;
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Work Sans', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-top: 16px;
+            transition: all 0.2s ease;
+        }
+        
+        .reset-btn:hover {
+            background: #FEF2F2;
+            border-color: #EF4444;
+            color: #EF4444;
+        }
+        
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .summary-card {
+                position: relative;
+                top: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>RENOVATION COST CALCULATOR</h1>
+            <p class="subtitle">DBS Properties · Comprehensive Rehab Estimator</p>
+        </header>
+        
+        <div class="market-selector">
+            <label>Select Market:</label>
+            <button class="market-btn active" onclick="setMarket('stlouis')">St. Louis</button>
+            <button class="market-btn" onclick="setMarket('ohio')">Ohio (Columbus/Cincinnati)</button>
+        </div>
+        
+        <div class="main-content">
+            <div class="categories" id="categories"></div>
+            
+            <div>
+                <div class="summary-card">
+                    <div class="summary-title">ESTIMATED TOTAL</div>
+                    <div class="total-amount" id="totalAmount">$0</div>
+                    <div class="total-label">Current Market: <span id="currentMarket">St. Louis</span></div>
+                    <div class="selected-count" id="selectedCount">0 items selected</div>
+                    <button class="reset-btn" onclick="resetAll()">Reset All</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentMarket = 'stlouis';
+        
+        const costs = {
+            stlouis: {
+                'Demolition & Prep': {
+                    'Interior demolition (full gutting)': 3500,
+                    'Partial demolition (kitchen/bath only)': 1500,
+                    'Dumpster rental (30-yard, 2 weeks)': 600,
+                    'Debris removal & hauling': 800,
+                    'Asbestos abatement (per room)': 2000,
+                    'Lead paint remediation': 3500,
+                    'Mold remediation': 2500
+                },
+                'Structural & Foundation': {
+                    'Foundation repair (minor cracks)': 2500,
+                    'Foundation repair (major/structural)': 8000,
+                    'Basement waterproofing (interior)': 4000,
+                    'Basement waterproofing (exterior/French drain)': 8000,
+                    'Sump pump installation': 1200,
+                    'Crawl space encapsulation': 5000,
+                    'Floor joist repair/sistering': 3000,
+                    'Beam replacement': 4500,
+                    'Load-bearing wall removal': 3500,
+                    'Add support columns/posts': 2000
+                },
+                'Roofing': {
+                    'Roof replacement (asphalt shingles, standard)': 8000,
+                    'Roof replacement (architectural shingles)': 10000,
+                    'Roof replacement (metal)': 15000,
+                    'Roof repair (patch/section)': 1500,
+                    'Soffit & fascia replacement': 2500,
+                    'Gutter installation (full house)': 1500,
+                    'Gutter guards': 800,
+                    'Chimney repair': 2000,
+                    'Chimney cap installation': 400,
+                    'Skylight installation': 1800
+                },
+                'Exterior': {
+                    'Vinyl siding (full house)': 9000,
+                    'Fiber cement siding (full house)': 14000,
+                    'Brick repointing': 4000,
+                    'Stucco repair': 3000,
+                    'Exterior painting (full house)': 4500,
+                    'Soffit & fascia painting': 1200,
+                    'Pressure washing': 400,
+                    'New front porch': 5000,
+                    'Porch repair/rebuild': 2500,
+                    'Deck construction (12x16)': 6000,
+                    'Deck repair/refinish': 2000,
+                    'Fence installation (wood, 150 linear ft)': 3500,
+                    'Fence installation (vinyl, 150 linear ft)': 4500,
+                    'Retaining wall': 4000
+                },
+                'Windows & Doors': {
+                    'Window replacement (per window, vinyl)': 450,
+                    'Window replacement (per window, wood)': 700,
+                    'Bay/bow window installation': 2500,
+                    'Sliding glass door replacement': 1500,
+                    'Front door replacement (steel)': 1200,
+                    'Front door replacement (fiberglass)': 1800,
+                    'Interior door replacement (per door)': 300,
+                    'Patio door installation': 2000,
+                    'Storm door installation': 400,
+                    'Garage door replacement (single)': 1200,
+                    'Garage door replacement (double)': 2000,
+                    'Garage door opener installation': 500
+                },
+                'Plumbing': {
+                    'Full plumbing re-pipe (whole house)': 7000,
+                    'Partial plumbing re-pipe (one floor)': 3500,
+                    'Main water line replacement': 3000,
+                    'Sewer line replacement': 5000,
+                    'Plumbing stack replacement': 2500,
+                    'Water heater replacement (40-50 gal)': 1400,
+                    'Tankless water heater installation': 2500,
+                    'New bathroom rough-in': 2000,
+                    'Kitchen plumbing rough-in': 1500,
+                    'Washing machine hookup': 400,
+                    'Gas line installation (for range)': 800,
+                    'Sump pump replacement': 900,
+                    'Ejector pump installation': 1500,
+                    'Fix major leak': 600
+                },
+                'Electrical': {
+                    'Full electrical rewire (whole house)': 8000,
+                    'Partial rewire (one floor)': 4000,
+                    'Electrical panel upgrade (100 to 200 amp)': 2500,
+                    'Add sub-panel': 1200,
+                    'New circuit installation': 300,
+                    'Outlet/switch replacement (per 10)': 250,
+                    'GFCI outlet installation (per)': 75,
+                    'Recessed lighting installation (per 6)': 900,
+                    'Ceiling fan installation (per)': 250,
+                    'Chandelier installation': 300,
+                    'Under-cabinet lighting': 600,
+                    'Exterior lighting package': 800,
+                    'EV charger installation': 1500,
+                    'Generator hookup': 1200,
+                    'Smart home wiring': 1500
+                },
+                'HVAC': {
+                    'Central AC replacement (3-ton)': 5500,
+                    'Furnace replacement (gas)': 4000,
+                    'Full HVAC system replacement': 9000,
+                    'Mini-split system installation': 4500,
+                    'Ductwork replacement (full house)': 3500,
+                    'Ductwork repair': 1200,
+                    'Duct cleaning': 400,
+                    'Thermostat upgrade (smart)': 300,
+                    'Humidifier installation': 600,
+                    'Air purifier installation': 800,
+                    'Ventilation fan installation': 400
+                },
+                'Insulation': {
+                    'Attic insulation (blown-in)': 1800,
+                    'Wall insulation (injection foam)': 3000,
+                    'Basement insulation': 2000,
+                    'Crawl space insulation': 1500,
+                    'Rim joist insulation': 800,
+                    'Garage insulation': 1200
+                },
+                'Drywall & Framing': {
+                    'Drywall installation (full house)': 8000,
+                    'Drywall repair (small)': 300,
+                    'Drywall repair (large/multiple rooms)': 1500,
+                    'Texture matching': 600,
+                    'Ceiling repair': 800,
+                    'Popcorn ceiling removal': 2000,
+                    'Framing new wall': 1200,
+                    'Remove non-load-bearing wall': 800,
+                    'Closet framing': 600,
+                    'Drop ceiling installation': 1500
+                },
+                'Flooring': {
+                    'Carpet installation (whole house, mid-grade)': 4500,
+                    'Luxury vinyl plank (whole house)': 6000,
+                    'Hardwood flooring (solid oak, 1000 sq ft)': 9000,
+                    'Engineered hardwood (1000 sq ft)': 7000,
+                    'Tile flooring (ceramic, 1000 sq ft)': 5500,
+                    'Tile flooring (porcelain, 1000 sq ft)': 7000,
+                    'Laminate flooring (1000 sq ft)': 3500,
+                    'Subfloor replacement': 2500,
+                    'Floor leveling': 1800,
+                    'Stair refinishing': 1500,
+                    'Staircase replacement': 4500,
+                    'Install stair runner': 800
+                },
+                'Interior Painting': {
+                    'Interior painting (whole house, 2 coats)': 4000,
+                    'Interior painting (single room)': 500,
+                    'Trim painting (whole house)': 1500,
+                    'Cabinet painting': 2000,
+                    'Accent wall': 250,
+                    'Wallpaper removal': 600,
+                    'Wallpaper installation': 1200
+                },
+                'Kitchen': {
+                    'Kitchen remodel (budget: stock cabinets)': 15000,
+                    'Kitchen remodel (mid-range: semi-custom)': 25000,
+                    'Kitchen remodel (high-end: custom)': 40000,
+                    'Cabinet refacing': 4500,
+                    'Cabinet painting only': 2000,
+                    'New countertops (laminate)': 1500,
+                    'New countertops (granite)': 3500,
+                    'New countertops (quartz)': 4500,
+                    'Tile backsplash': 1200,
+                    'Kitchen sink & faucet': 600,
+                    'Garbage disposal': 300,
+                    'Dishwasher installation': 800,
+                    'Range/oven (mid-grade)': 1000,
+                    'Refrigerator (mid-grade)': 1200,
+                    'Microwave installation': 400,
+                    'Kitchen island construction': 2500,
+                    'Open concept (remove wall to dining)': 3000,
+                    'Pantry installation': 1500
+                },
+                'Bathrooms': {
+                    'Full bathroom remodel (mid-range)': 12000,
+                    'Full bathroom remodel (high-end)': 20000,
+                    'Half bath remodel': 5000,
+                    'Tub to shower conversion': 4000,
+                    'Shower installation (tile)': 3500,
+                    'Tub replacement': 2000,
+                    'Vanity & sink replacement': 1200,
+                    'Toilet replacement (standard)': 400,
+                    'Toilet replacement (dual-flush)': 600,
+                    'Tile flooring (bathroom)': 1200,
+                    'Tile surround': 2000,
+                    'Bathroom exhaust fan': 300,
+                    'Mirror & lighting': 500,
+                    'Shower door installation': 800,
+                    'Bathroom addition (new bathroom)': 18000
+                },
+                'Basement & Attic': {
+                    'Basement finishing (per sq ft)': 35,
+                    'Egress window installation': 3500,
+                    'Basement bathroom addition': 15000,
+                    'Basement waterproofing (interior)': 4000,
+                    'Sump pump installation': 1200,
+                    'Attic conversion to bedroom': 20000,
+                    'Pull-down attic stairs': 400,
+                    'Attic ventilation improvement': 800
+                },
+                'Laundry': {
+                    'Laundry room buildout': 3500,
+                    'Washer/dryer hookup': 600,
+                    'Utility sink installation': 500,
+                    'Laundry cabinets': 1200
+                },
+                'Landscaping & Exterior': {
+                    'Basic landscaping package': 2500,
+                    'Full landscape design & install': 6000,
+                    'Sod installation (1000 sq ft)': 1500,
+                    'Seed & soil prep': 800,
+                    'Mulch beds & edging': 600,
+                    'Tree removal (medium)': 1200,
+                    'Tree removal (large)': 2500,
+                    'Stump grinding': 300,
+                    'Shrub & plant installation': 1000,
+                    'Irrigation system': 3000,
+                    'Concrete driveway': 5000,
+                    'Asphalt driveway': 3500,
+                    'Driveway repair/reseal': 800,
+                    'Concrete walkway': 2000,
+                    'Paver patio (12x16)': 4500,
+                    'Retaining wall': 4000,
+                    'French drain installation': 2500,
+                    'Outdoor lighting': 1200,
+                    'Mailbox replacement': 200
+                },
+                'Miscellaneous': {
+                    'Permits & inspections': 1000,
+                    'Architectural drawings': 2000,
+                    'Engineering assessment': 1500,
+                    'Final cleaning': 500,
+                    'Staging (basic)': 1500,
+                    'Staging (full)': 3000,
+                    'Appliance package (mid-grade)': 3500,
+                    'Smart home package': 2000,
+                    'Security system installation': 1200,
+                    'Garage organization system': 800,
+                    'Closet organizer system': 600,
+                    'Fire suppression system': 3000,
+                    'Radon mitigation': 1500,
+                    'Pest control treatment': 400,
+                    'Termite treatment': 800,
+                    'General contractor fee (15%)': 0
+                }
+            },
+            ohio: {
+                'Demolition & Prep': {
+                    'Interior demolition (full gutting)': 4000,
+                    'Partial demolition (kitchen/bath only)': 1800,
+                    'Dumpster rental (30-yard, 2 weeks)': 700,
+                    'Debris removal & hauling': 900,
+                    'Asbestos abatement (per room)': 2200,
+                    'Lead paint remediation': 4000,
+                    'Mold remediation': 2800
+                },
+                'Structural & Foundation': {
+                    'Foundation repair (minor cracks)': 2800,
+                    'Foundation repair (major/structural)': 9000,
+                    'Basement waterproofing (interior)': 4500,
+                    'Basement waterproofing (exterior/French drain)': 9000,
+                    'Sump pump installation': 1400,
+                    'Crawl space encapsulation': 5500,
+                    'Floor joist repair/sistering': 3500,
+                    'Beam replacement': 5000,
+                    'Load-bearing wall removal': 4000,
+                    'Add support columns/posts': 2300
+                },
+                'Roofing': {
+                    'Roof replacement (asphalt shingles, standard)': 9000,
+                    'Roof replacement (architectural shingles)': 11000,
+                    'Roof replacement (metal)': 17000,
+                    'Roof repair (patch/section)': 1700,
+                    'Soffit & fascia replacement': 2800,
+                    'Gutter installation (full house)': 1700,
+                    'Gutter guards': 900,
+                    'Chimney repair': 2300,
+                    'Chimney cap installation': 450,
+                    'Skylight installation': 2000
+                },
+                'Exterior': {
+                    'Vinyl siding (full house)': 10000,
+                    'Fiber cement siding (full house)': 16000,
+                    'Brick repointing': 4500,
+                    'Stucco repair': 3500,
+                    'Exterior painting (full house)': 5000,
+                    'Soffit & fascia painting': 1400,
+                    'Pressure washing': 450,
+                    'New front porch': 5500,
+                    'Porch repair/rebuild': 2800,
+                    'Deck construction (12x16)': 6500,
+                    'Deck repair/refinish': 2300,
+                    'Fence installation (wood, 150 linear ft)': 4000,
+                    'Fence installation (vinyl, 150 linear ft)': 5000,
+                    'Retaining wall': 4500
+                },
+                'Windows & Doors': {
+                    'Window replacement (per window, vinyl)': 500,
+                    'Window replacement (per window, wood)': 800,
+                    'Bay/bow window installation': 2800,
+                    'Sliding glass door replacement': 1700,
+                    'Front door replacement (steel)': 1400,
+                    'Front door replacement (fiberglass)': 2000,
+                    'Interior door replacement (per door)': 350,
+                    'Patio door installation': 2200,
+                    'Storm door installation': 450,
+                    'Garage door replacement (single)': 1400,
+                    'Garage door replacement (double)': 2300,
+                    'Garage door opener installation': 550
+                },
+                'Plumbing': {
+                    'Full plumbing re-pipe (whole house)': 8000,
+                    'Partial plumbing re-pipe (one floor)': 4000,
+                    'Main water line replacement': 3500,
+                    'Sewer line replacement': 5500,
+                    'Plumbing stack replacement': 2800,
+                    'Water heater replacement (40-50 gal)': 1600,
+                    'Tankless water heater installation': 2800,
+                    'New bathroom rough-in': 2300,
+                    'Kitchen plumbing rough-in': 1700,
+                    'Washing machine hookup': 450,
+                    'Gas line installation (for range)': 900,
+                    'Sump pump replacement': 1000,
+                    'Ejector pump installation': 1700,
+                    'Fix major leak': 700
+                },
+                'Electrical': {
+                    'Full electrical rewire (whole house)': 9000,
+                    'Partial rewire (one floor)': 4500,
+                    'Electrical panel upgrade (100 to 200 amp)': 2800,
+                    'Add sub-panel': 1400,
+                    'New circuit installation': 350,
+                    'Outlet/switch replacement (per 10)': 280,
+                    'GFCI outlet installation (per)': 85,
+                    'Recessed lighting installation (per 6)': 1000,
+                    'Ceiling fan installation (per)': 280,
+                    'Chandelier installation': 350,
+                    'Under-cabinet lighting': 700,
+                    'Exterior lighting package': 900,
+                    'EV charger installation': 1700,
+                    'Generator hookup': 1400,
+                    'Smart home wiring': 1700
+                },
+                'HVAC': {
+                    'Central AC replacement (3-ton)': 6000,
+                    'Furnace replacement (gas)': 4500,
+                    'Full HVAC system replacement': 10000,
+                    'Mini-split system installation': 5000,
+                    'Ductwork replacement (full house)': 4000,
+                    'Ductwork repair': 1400,
+                    'Duct cleaning': 450,
+                    'Thermostat upgrade (smart)': 350,
+                    'Humidifier installation': 700,
+                    'Air purifier installation': 900,
+                    'Ventilation fan installation': 450
+                },
+                'Insulation': {
+                    'Attic insulation (blown-in)': 2000,
+                    'Wall insulation (injection foam)': 3500,
+                    'Basement insulation': 2300,
+                    'Crawl space insulation': 1700,
+                    'Rim joist insulation': 900,
+                    'Garage insulation': 1400
+                },
+                'Drywall & Framing': {
+                    'Drywall installation (full house)': 9000,
+                    'Drywall repair (small)': 350,
+                    'Drywall repair (large/multiple rooms)': 1700,
+                    'Texture matching': 700,
+                    'Ceiling repair': 900,
+                    'Popcorn ceiling removal': 2300,
+                    'Framing new wall': 1400,
+                    'Remove non-load-bearing wall': 900,
+                    'Closet framing': 700,
+                    'Drop ceiling installation': 1700
+                },
+                'Flooring': {
+                    'Carpet installation (whole house, mid-grade)': 5000,
+                    'Luxury vinyl plank (whole house)': 6500,
+                    'Hardwood flooring (solid oak, 1000 sq ft)': 10000,
+                    'Engineered hardwood (1000 sq ft)': 8000,
+                    'Tile flooring (ceramic, 1000 sq ft)': 6000,
+                    'Tile flooring (porcelain, 1000 sq ft)': 8000,
+                    'Laminate flooring (1000 sq ft)': 4000,
+                    'Subfloor replacement': 2800,
+                    'Floor leveling': 2000,
+                    'Stair refinishing': 1700,
+                    'Staircase replacement': 5000,
+                    'Install stair runner': 900
+                },
+                'Interior Painting': {
+                    'Interior painting (whole house, 2 coats)': 4500,
+                    'Interior painting (single room)': 600,
+                    'Trim painting (whole house)': 1700,
+                    'Cabinet painting': 2300,
+                    'Accent wall': 300,
+                    'Wallpaper removal': 700,
+                    'Wallpaper installation': 1400
+                },
+                'Kitchen': {
+                    'Kitchen remodel (budget: stock cabinets)': 17000,
+                    'Kitchen remodel (mid-range: semi-custom)': 28000,
+                    'Kitchen remodel (high-end: custom)': 45000,
+                    'Cabinet refacing': 5000,
+                    'Cabinet painting only': 2300,
+                    'New countertops (laminate)': 1700,
+                    'New countertops (granite)': 4000,
+                    'New countertops (quartz)': 5000,
+                    'Tile backsplash': 1400,
+                    'Kitchen sink & faucet': 700,
+                    'Garbage disposal': 350,
+                    'Dishwasher installation': 900,
+                    'Range/oven (mid-grade)': 1100,
+                    'Refrigerator (mid-grade)': 1400,
+                    'Microwave installation': 450,
+                    'Kitchen island construction': 2800,
+                    'Open concept (remove wall to dining)': 3500,
+                    'Pantry installation': 1700
+                },
+                'Bathrooms': {
+                    'Full bathroom remodel (mid-range)': 14000,
+                    'Full bathroom remodel (high-end)': 23000,
+                    'Half bath remodel': 5500,
+                    'Tub to shower conversion': 4500,
+                    'Shower installation (tile)': 4000,
+                    'Tub replacement': 2300,
+                    'Vanity & sink replacement': 1400,
+                    'Toilet replacement (standard)': 450,
+                    'Toilet replacement (dual-flush)': 700,
+                    'Tile flooring (bathroom)': 1400,
+                    'Tile surround': 2300,
+                    'Bathroom exhaust fan': 350,
+                    'Mirror & lighting': 600,
+                    'Shower door installation': 900,
+                    'Bathroom addition (new bathroom)': 20000
+                },
+                'Basement & Attic': {
+                    'Basement finishing (per sq ft)': 40,
+                    'Egress window installation': 4000,
+                    'Basement bathroom addition': 17000,
+                    'Basement waterproofing (interior)': 4500,
+                    'Sump pump installation': 1400,
+                    'Attic conversion to bedroom': 23000,
+                    'Pull-down attic stairs': 450,
+                    'Attic ventilation improvement': 900
+                },
+                'Laundry': {
+                    'Laundry room buildout': 4000,
+                    'Washer/dryer hookup': 700,
+                    'Utility sink installation': 600,
+                    'Laundry cabinets': 1400
+                },
+                'Landscaping & Exterior': {
+                    'Basic landscaping package': 2800,
+                    'Full landscape design & install': 6500,
+                    'Sod installation (1000 sq ft)': 1700,
+                    'Seed & soil prep': 900,
+                    'Mulch beds & edging': 700,
+                    'Tree removal (medium)': 1400,
+                    'Tree removal (large)': 2800,
+                    'Stump grinding': 350,
+                    'Shrub & plant installation': 1100,
+                    'Irrigation system': 3500,
+                    'Concrete driveway': 5500,
+                    'Asphalt driveway': 4000,
+                    'Driveway repair/reseal': 900,
+                    'Concrete walkway': 2300,
+                    'Paver patio (12x16)': 5000,
+                    'Retaining wall': 4500,
+                    'French drain installation': 2800,
+                    'Outdoor lighting': 1400,
+                    'Mailbox replacement': 250
+                },
+                'Miscellaneous': {
+                    'Permits & inspections': 1200,
+                    'Architectural drawings': 2300,
+                    'Engineering assessment': 1700,
+                    'Final cleaning': 600,
+                    'Staging (basic)': 1700,
+                    'Staging (full)': 3500,
+                    'Appliance package (mid-grade)': 4000,
+                    'Smart home package': 2300,
+                    'Security system installation': 1400,
+                    'Garage organization system': 900,
+                    'Closet organizer system': 700,
+                    'Fire suppression system': 3500,
+                    'Radon mitigation': 1700,
+                    'Pest control treatment': 450,
+                    'Termite treatment': 900,
+                    'General contractor fee (15%)': 0
+                }
+            }
+        };
+        
+        function setMarket(market) {
+            currentMarket = market;
+            document.querySelectorAll('.market-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('currentMarket').textContent = market === 'stlouis' ? 'St. Louis' : 'Ohio (Columbus/Cincinnati)';
+            renderCategories();
+            updateTotal();
+        }
+        
+        function renderCategories() {
+            const container = document.getElementById('categories');
+            container.innerHTML = '';
+            
+            const marketCosts = costs[currentMarket];
+            
+            Object.keys(marketCosts).forEach(category => {
+                const categoryCard = document.createElement('div');
+                categoryCard.className = 'category-card';
+                
+                const header = document.createElement('div');
+                header.className = 'category-header';
+                
+                const title = document.createElement('div');
+                title.className = 'category-title';
+                title.textContent = category;
+                
+                const total = document.createElement('div');
+                total.className = 'category-total';
+                total.id = `cat-${category.replace(/\s+/g, '-')}`;
+                total.textContent = '$0';
+                
+                header.appendChild(title);
+                header.appendChild(total);
+                
+                const itemsContainer = document.createElement('div');
+                itemsContainer.className = 'category-items';
+                
+                Object.keys(marketCosts[category]).forEach(itemName => {
+                    const cost = marketCosts[category][itemName];
+                    
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'item';
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `${category}-${itemName}`;
+                    checkbox.onchange = () => {
+                        itemDiv.classList.toggle('checked', checkbox.checked);
+                        updateTotal();
+                    };
+                    
+                    const label = document.createElement('label');
+                    label.className = 'item-label';
+                    label.htmlFor = checkbox.id;
+                    label.textContent = itemName;
+                    
+                    const costSpan = document.createElement('span');
+                    costSpan.className = 'item-cost';
+                    costSpan.textContent = cost === 0 ? 'Variable' : `$${cost.toLocaleString()}`;
+                    
+                    itemDiv.appendChild(checkbox);
+                    itemDiv.appendChild(label);
+                    itemDiv.appendChild(costSpan);
+                    
+                    itemsContainer.appendChild(itemDiv);
+                });
+                
+                categoryCard.appendChild(header);
+                categoryCard.appendChild(itemsContainer);
+                container.appendChild(categoryCard);
+            });
+        }
+        
+        function updateTotal() {
+            const marketCosts = costs[currentMarket];
+            let total = 0;
+            let count = 0;
+            
+            Object.keys(marketCosts).forEach(category => {
+                let categoryTotal = 0;
+                
+                Object.keys(marketCosts[category]).forEach(itemName => {
+                    const checkbox = document.getElementById(`${category}-${itemName}`);
+                    if (checkbox && checkbox.checked) {
+                        categoryTotal += marketCosts[category][itemName];
+                        count++;
+                    }
+                });
+                
+                const catTotalEl = document.getElementById(`cat-${category.replace(/\s+/g, '-')}`);
+                if (catTotalEl) {
+                    catTotalEl.textContent = categoryTotal > 0 ? `$${categoryTotal.toLocaleString()}` : '$0';
+                }
+                
+                total += categoryTotal;
+            });
+            
+            document.getElementById('totalAmount').textContent = `$${total.toLocaleString()}`;
+            document.getElementById('selectedCount').textContent = `${count} item${count !== 1 ? 's' : ''} selected`;
+        }
+        
+        function resetAll() {
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+            });
+            document.querySelectorAll('.item').forEach(item => {
+                item.classList.remove('checked');
+            });
+            updateTotal();
+        }
+        
+        // Initialize
+        renderCategories();
+    </script>
+</body>
+</html>
